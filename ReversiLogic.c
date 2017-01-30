@@ -26,7 +26,7 @@ void resetBoard(Player board[8][8]) {
     board[4][3] = board[3][4] = Black;
 }
 
-void printBoard(Player board[8][8], Player p) {
+void printBoard(Player board[8][8], Player p, int disks[2]) {
     for (int i = 0; i < 8; i++) {
         printf("%c", '\n');
         for (int j = 0; j < 8; j++) {
@@ -45,6 +45,9 @@ void printBoard(Player board[8][8], Player p) {
     }
     char* pString = p == Black ? "\nBlack" : "\nWhite";
     printf("%s\n", pString);
+    printf("%i", disks[0]);
+    printf("%s", "-");
+    printf("%i\n", disks[1]);
 }
 
 int onBoard(int a) {return (a >= 0 && a < 8);}
@@ -143,13 +146,29 @@ int anyViableMove(Player board[8][8], Player p, Player o) {
     return 0;
 }
 
+int* countDisks(Player board[8][8]) {
+    int black = 0, white = 0;
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            if (board[i][j] == Black) {
+                black++;
+            } else if (board[i][j] == White) {
+                white++;
+            }
+        }
+    }
+    int count[2] = {black, white};
+    return count;
+}
+
 int main(void) {
     Player board[8][8] = {None};
     board[3][3] = board[4][4] = White;
     board[4][3] = board[3][4] = Black;
     Player currentP = Black;
     Player currentO = White;
-    printBoard(board, Black);
+    int disks[2] = {2, 2};
+    printBoard(board, Black, disks);
     int gameOver = 0;
 
     char input[2];
@@ -182,7 +201,8 @@ int main(void) {
             currentP = (currentP == Black) ? White : Black;
             gameOver = 0;
         }
-        printBoard(board, currentP);
+        *disks = countDisks(board);
+        printBoard(board, currentP, *disks);
    }
 
     return 0;
