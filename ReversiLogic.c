@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 typedef enum {
     None,
@@ -68,16 +70,18 @@ int play(Player board[8][8], char *move, Player p) {
     }
 }
 
-char* compMove(Player board[8][8], Player p) {
-    char move[2];
+void compMove(Player board[8][8], Player p, char *outputMove) {
+    char move[3];
     Player o = (p == Black) ? White : Black;
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
             if (viableMove(board, p, o, i, j)) {
                 update(board, p, o, i, j);
                 move[0] = i+'1';
-                move[1] = i+'a';
-                return move;
+                move[1] = j+'a';
+                move[2] = '\0';
+                strcpy(outputMove, move);
+                return;
             }
         }
     }
@@ -149,37 +153,15 @@ int main(void) {
     int gameOver = 0;
 
     char input[2];
-//    while (1) {
-//        if (!anyViableMove(board, currentP, currentO)) {
-//            if (gameOver) {
-//
-//            }
-//            currentO = currentP;
-//            currentP = (currentP == Black) ? White : Black;
-//            gameOver = 1;
-//            continue;
-//        }
-//        if (scanf("%s", input) != 1)
-//            break;
-//        if(play(board, input, currentP)) {
-//            currentO = currentP;
-//            currentP = (currentP == Black) ? White : Black;
-//            gameOver = 0;
-//        }
-//        printBoard(board, currentP);
-//   }
-   printf("%s\n", "Enter your color (Black or White)");
-   char pChar[5];
+   printf("Enter your color (Black or White): \n");
+   char pChar[6];
    if (scanf("%s", pChar) != 1) {
         //exit program?
    }
-   Player p = (*pChar == "Black") ? Black : White;
+   Player p = (strcmp(pChar, "Black") == 0) ? Black : White;
    char move[2];
    while (1) {
         if (!anyViableMove(board, currentP, currentO)) {
-            if (gameOver) {
-
-            }
             currentO = currentP;
             currentP = (currentP == Black) ? White : Black;
             gameOver = 1;
@@ -194,9 +176,8 @@ int main(void) {
                 gameOver = 0;
             }
         } else {
-            *move = compMove(board, currentP);
-            printf("%s\n", "Computer plays");
-            printf("%s\n", move);
+            compMove(board, currentP, move);
+            printf("Computer plays: %s\n", move);
             currentO = currentP;
             currentP = (currentP == Black) ? White : Black;
             gameOver = 0;
