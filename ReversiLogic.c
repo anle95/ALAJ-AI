@@ -24,7 +24,7 @@ void resetBoard(Player board[8][8]) {
     board[4][3] = board[3][4] = Black;
 }
 
-void printBoard(Player board[8][8]) {
+void printBoard(Player board[8][8], Player p) {
     for (int i = 0; i < 8; i++) {
         printf("%c", '\n');
         for (int j = 0; j < 8; j++) {
@@ -41,6 +41,8 @@ void printBoard(Player board[8][8]) {
             }
         }
     }
+    char* pString = p == Black ? "\nBlack" : "\nWhite";
+    printf("%s\n", pString);
 }
 
 int onBoard(int a) {return (a >= 0 && a < 8);}
@@ -66,7 +68,23 @@ int play(Player board[8][8], char *move, Player p) {
     }
 }
 
+char* compMove(Player board[8][8], Player p) {
+    char move[2];
+    Player o = (p == Black) ? White : Black;
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            if (viableMove(board, p, o, i, j)) {
+                update(board, p, o, i, j);
+                move[0] = i+'1';
+                move[1] = i+'a';
+                return move;
+            }
+        }
+    }
+}
+
 int viableMove(Player board[8][8], Player p, Player o, int a, int b) {
+    if (board[a][b] != None) return 0;
     for (int i = -1; i <= 1; i++) {
         for (int j = -1; j <= 1; j++) {
             if (!(i == 0 && j == 0) && checkLine(board, p, o, a, b, i, j)) return 1;
@@ -112,21 +130,78 @@ void turn(Player board[8][8], Player p, int a, int b, int dirX, int dirY) {
     }
 }
 
+int anyViableMove(Player board[8][8], Player p, Player o) {
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            if (viableMove(board, p, o, i, j)) return 1;
+        }
+    }
+    return 0;
+}
+
 int main(void) {
     Player board[8][8] = {None};
     board[3][3] = board[4][4] = White;
     board[4][3] = board[3][4] = Black;
     Player currentP = Black;
-    printBoard(board);
+    Player currentO = White;
+    printBoard(board, Black);
+    int gameOver = 0;
 
     char input[2];
-    while (1) {
-        if (scanf("%s", input) != 1)
-            break;
-        if(play(board, input, currentP)) {
+//    while (1) {
+//        if (!anyViableMove(board, currentP, currentO)) {
+//            if (gameOver) {
+//
+//            }
+//            currentO = currentP;
+//            currentP = (currentP == Black) ? White : Black;
+//            gameOver = 1;
+//            continue;
+//        }
+//        if (scanf("%s", input) != 1)
+//            break;
+//        if(play(board, input, currentP)) {
+//            currentO = currentP;
+//            currentP = (currentP == Black) ? White : Black;
+//            gameOver = 0;
+//        }
+//        printBoard(board, currentP);
+//   }
+   printf("%s\n", "Enter your color (Black or White)");
+   char pChar[5];
+   if (scanf("%s", pChar) != 1) {
+        //exit program?
+   }
+   Player p = (*pChar == "Black") ? Black : White;
+   char move[2];
+   while (1) {
+        if (!anyViableMove(board, currentP, currentO)) {
+            if (gameOver) {
+
+            }
+            currentO = currentP;
             currentP = (currentP == Black) ? White : Black;
+            gameOver = 1;
+            continue;
         }
-        printBoard(board);
+        if (currentP == p) {
+            if (scanf("%s", input) != 1)
+            break;
+            if(play(board, input, currentP)) {
+                currentO = currentP;
+                currentP = (currentP == Black) ? White : Black;
+                gameOver = 0;
+            }
+        } else {
+            *move = compMove(board, currentP);
+            printf("%s\n", "Computer plays");
+            printf("%s\n", move);
+            currentO = currentP;
+            currentP = (currentP == Black) ? White : Black;
+            gameOver = 0;
+        }
+        printBoard(board, currentP);
    }
 
     return 0;
