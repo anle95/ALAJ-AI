@@ -8,13 +8,23 @@ typedef enum {
     White
 } Player;
 
+struct GameNode {
+    GameNode parent, *children;
+    Player board[8][8];
+    Player p, o;
+};
+
 void resetBoard(Player board[8][8]);
+void printBoard(Player board[8][8], Player p, int black, int white);
 int onBoard(int a);
 int play(Player board[8][8], char *move, Player p);
+void compMove(Player board[8][8], Player p, char *outputMove);
 int viableMove(Player board[8][8], Player p, Player o, int a, int b);
 void update(Player board[8][8], Player p, Player o, int a, int b);
 int checkLine(Player board[8][8], Player p, Player o, int a, int b, int dirX, int dirY);
 void turn(Player board[8][8], Player p, int a, int b, int dirX, int dirY);
+int anyViableMove(Player board[8][8], Player p, Player o);
+int* countDisks(Player board[8][8]);
 
 void resetBoard(Player board[8][8]) {
     for (int i = 0; i < 8; i++) {
@@ -26,7 +36,7 @@ void resetBoard(Player board[8][8]) {
     board[4][3] = board[3][4] = Black;
 }
 
-void printBoard(Player board[8][8], Player p, int disks[2]) {
+void printBoard(Player board[8][8], Player p, int black, int white) {
     for (int i = 0; i < 8; i++) {
         printf("%c", '\n');
         for (int j = 0; j < 8; j++) {
@@ -43,11 +53,8 @@ void printBoard(Player board[8][8], Player p, int disks[2]) {
             }
         }
     }
-    char* pString = p == Black ? "\nBlack" : "\nWhite";
-    printf("%s\n", pString);
-    printf("%i", disks[0]);
-    printf("%s", "-");
-    printf("%i\n", disks[1]);
+    char* pString = p == Black ? "Black" : "White";
+    printf("\n%s\n%i%c%i\n", pString, black, '-', white);
 }
 
 int onBoard(int a) {return (a >= 0 && a < 8);}
@@ -157,7 +164,9 @@ int* countDisks(Player board[8][8]) {
             }
         }
     }
-    int count[2] = {black, white};
+    static int count[2];
+    count[0] = black;
+    count[1] = white;
     return count;
 }
 
@@ -167,8 +176,8 @@ int main(void) {
     board[4][3] = board[3][4] = Black;
     Player currentP = Black;
     Player currentO = White;
-    int disks[2] = {2, 2};
-    printBoard(board, Black, disks);
+    int *disks;
+    printBoard(board, Black, 2, 2);
     int gameOver = 0;
 
     char input[2];
@@ -201,8 +210,8 @@ int main(void) {
             currentP = (currentP == Black) ? White : Black;
             gameOver = 0;
         }
-        *disks = countDisks(board);
-        printBoard(board, currentP, *disks);
+        disks = countDisks(board);
+        printBoard(board, currentP, *disks, *(disks+1));
    }
 
     return 0;
