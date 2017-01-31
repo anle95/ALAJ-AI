@@ -1,46 +1,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "Reversi.h"
 
-typedef enum {
-    None,
-    Black,
-    White
-} Player;
-
-struct GameNode {
-    GameNode parent, *children;
-    Player board[8][8];
-    Player p, o;
-};
-
-void resetBoard(Player board[8][8]);
-void printBoard(Player board[8][8], Player p, int black, int white);
-int onBoard(int a);
-int play(Player board[8][8], char *move, Player p);
-void compMove(Player board[8][8], Player p, char *outputMove);
-int viableMove(Player board[8][8], Player p, Player o, int a, int b);
-void update(Player board[8][8], Player p, Player o, int a, int b);
-int checkLine(Player board[8][8], Player p, Player o, int a, int b, int dirX, int dirY);
-void turn(Player board[8][8], Player p, int a, int b, int dirX, int dirY);
-int anyViableMove(Player board[8][8], Player p, Player o);
-int* countDisks(Player board[8][8]);
-
-void resetBoard(Player board[8][8]) {
+void resetGame(struct GameState *Game) {
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
-            board[i][j] = None;
+            Game->board[i][j] = None;
         }
     }
-    board[3][3] = board[4][4] = White;
-    board[4][3] = board[3][4] = Black;
+    Game->board[3][3] = Game->board[4][4] = White;
+    Game->board[4][3] = Game->board[3][4] = Black;
+    Game->currentP = Black;
+    Game->currentO = White;
+    Game->black = 2;
+    Game->white = 2;
 }
 
-void printBoard(Player board[8][8], Player p, int black, int white) {
+void printBoard(struct GameState *Game) {
     for (int i = 0; i < 8; i++) {
-        printf("%c", '\n');
+        printf("\n");
         for (int j = 0; j < 8; j++) {
-            switch (board[i][j]) {
+            switch (Game->board[i][j]) {
                 case White:
                     printf("%c", 'W');
                     break;
@@ -53,15 +34,16 @@ void printBoard(Player board[8][8], Player p, int black, int white) {
             }
         }
     }
-    char* pString = p == Black ? "Black" : "White";
-    printf("\n%s\n%i%c%i\n", pString, black, '-', white);
+    char* pString = Game->currentP == Black ? "Black" : "White";
+    printf("\n%i - %i\n%s to move\n", Game->black, Game->white, pString);
 }
 
-int onBoard(int a) {return (a >= 0 && a < 8);}
+int onBoard(int a) {
+    return (a >= 0 && a < 8);
+}
 
-int play(Player board[8][8], char *move, Player p) {
+int play(struct GameState *Game, char *move) {
     int a = move[0] - '1';
-    Player o = (p == White) ? Black : White; //opponent
     if (!onBoard(a)) {
         printf("Invalid move\n");
         return 0;
@@ -71,8 +53,8 @@ int play(Player board[8][8], char *move, Player p) {
         printf("Invalid move\n");
         return 0;
     }
-    if(viableMove(board, p, o, a, b)) { //Troligen ineffektivt, jag gör nästan samma sak igen i update
-        update(board, p, o, a, b);
+    if(viableMove(Game, a, b)) { //Troligen ineffektivt, jag gör nästan samma sak igen i update
+        update(Game, a, b);
         return 1;
     } else {
         printf("Invalid move\n");
@@ -80,13 +62,12 @@ int play(Player board[8][8], char *move, Player p) {
     }
 }
 
-void compMove(Player board[8][8], Player p, char *outputMove) {
+void compMove(struct GameState *Game, char *outputMove) {
     char move[3];
-    Player o = (p == Black) ? White : Black;
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
-            if (viableMove(board, p, o, i, j)) {
-                update(board, p, o, i, j);
+            if (viableMove(Game, i, j)) {
+                update(Game, i, j);
                 move[0] = i+'1';
                 move[1] = j+'a';
                 move[2] = '\0';
@@ -97,122 +78,71 @@ void compMove(Player board[8][8], Player p, char *outputMove) {
     }
 }
 
-int viableMove(Player board[8][8], Player p, Player o, int a, int b) {
-    if (board[a][b] != None) return 0;
+int viableMove(struct GameState *Game, int a, int b) {
+    if (Game->board[a][b] != None) return 0;
     for (int i = -1; i <= 1; i++) {
         for (int j = -1; j <= 1; j++) {
-            if (!(i == 0 && j == 0) && checkLine(board, p, o, a, b, i, j)) return 1;
+            if (!(i == 0 && j == 0) && checkLine(Game, a, b, i, j)) return 1;
         }
     }
     return 0;
 }
 
-void update(Player board[8][8], Player p, Player o, int a, int b) {
-    board[a][b] = p;
+void update(struct GameState *Game, int a, int b) {
+    Game->board[a][b] = Game->currentP;
+    if (Game->currentP == White) Game->white++;
+    else                         Game->black++;
+
     for (int i = -1; i <= 1; i++) {
         for (int j = -1; j <= 1; j++) {
-            if(checkLine(board, p, o, a, b, i, j)) {
-                turn(board, p, a, b, i, j);
+            if(checkLine(Game, a, b, i, j)) {
+                turn(Game, a, b, i, j);
             }
         }
     }
 }
 
-int checkLine(Player board[8][8], Player p, Player o, int a, int b, int dirX, int dirY) {
+int checkLine(struct GameState *Game, int a, int b, int dirX, int dirY) {
     int x = a + dirX;
     int y = b + dirY;
     if(!(onBoard(x) && onBoard(y))) return 0;
-    Player curr = board[x][y];
-    if (curr == p) return 0;
-    while (curr == o) {
+    Player curr = Game->board[x][y];
+    if (curr == Game->currentP) return 0;
+    while (curr == Game->currentO) {
         x += dirX;
         y += dirY;
         if(!(onBoard(x) && onBoard(y))) return 0;
-        curr = board[x][y];
+        curr = Game->board[x][y];
     }
-    if (curr == p) return 1;
+    if (curr == Game->currentP) return 1;
     else return 0;
 }
 
-void turn(Player board[8][8], Player p, int a, int b, int dirX, int dirY) {
+void turn(struct GameState *Game, int a, int b, int dirX, int dirY) {
     int x = a + dirX;
     int y = b + dirY;
-    while (board[x][y] != p) {
-        board[x][y] = p;
+    int turned = 0;
+    while (Game->board[x][y] != Game->currentP) {
+        Game->board[x][y] = Game->currentP;
+        turned++;
         x += dirX;
         y += dirY;
     }
+
+    if (Game->currentP == White) {
+        Game->white += turned;
+        Game->black -= turned;
+    } else {
+        Game->black += turned;
+        Game->white -= turned;
+    }
 }
 
-int anyViableMove(Player board[8][8], Player p, Player o) {
+int anyViableMove(struct GameState *Game) {
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
-            if (viableMove(board, p, o, i, j)) return 1;
+            if (viableMove(Game, i, j)) return 1;
         }
     }
-    return 0;
-}
-
-int* countDisks(Player board[8][8]) {
-    int black = 0, white = 0;
-    for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 8; j++) {
-            if (board[i][j] == Black) {
-                black++;
-            } else if (board[i][j] == White) {
-                white++;
-            }
-        }
-    }
-    static int count[2];
-    count[0] = black;
-    count[1] = white;
-    return count;
-}
-
-int main(void) {
-    Player board[8][8] = {None};
-    board[3][3] = board[4][4] = White;
-    board[4][3] = board[3][4] = Black;
-    Player currentP = Black;
-    Player currentO = White;
-    int *disks;
-    printBoard(board, Black, 2, 2);
-    int gameOver = 0;
-
-    char input[2];
-   printf("Enter your color (Black or White): \n");
-   char pChar[6];
-   if (scanf("%s", pChar) != 1) {
-        //exit program?
-   }
-   Player p = (strcmp(pChar, "Black") == 0) ? Black : White;
-   char move[2];
-   while (1) {
-        if (!anyViableMove(board, currentP, currentO)) {
-            currentO = currentP;
-            currentP = (currentP == Black) ? White : Black;
-            gameOver = 1;
-            continue;
-        }
-        if (currentP == p) {
-            if (scanf("%s", input) != 1)
-            break;
-            if(play(board, input, currentP)) {
-                currentO = currentP;
-                currentP = (currentP == Black) ? White : Black;
-                gameOver = 0;
-            }
-        } else {
-            compMove(board, currentP, move);
-            printf("Computer plays: %s\n", move);
-            currentO = currentP;
-            currentP = (currentP == Black) ? White : Black;
-            gameOver = 0;
-        }
-        disks = countDisks(board);
-        printBoard(board, currentP, *disks, *(disks+1));
-   }
-
     return 0;
 }
