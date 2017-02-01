@@ -45,7 +45,7 @@ int recFind (struct GameState Game, struct Move m, int depth) {
     moveToString(m, move);
     play(&Game, move);
 
-    int maxDepth = 5;
+    int maxDepth = 4;
     if (depth > maxDepth)
         return evaluate(&Game);
 

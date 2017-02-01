@@ -21,7 +21,7 @@ int main(void) {
     Player p = (strcmp(pChar, "Black") == 0) ? Black : White;
     char computerMove[2];
     printBoard(&Game);
-    while (1) {
+    while (!gameOver) {
         if (!anyViableMove(&Game)) {
             gameOver = 1;
             continue;
