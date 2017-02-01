@@ -1,55 +1,76 @@
 #include "Reversi.h"
-//#include "ReversiMain.h"
-//#include "ReversiLogic.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
 struct GameNode {
      struct GameNode *parent, *children;
-     struct GameState *state;
+     struct GameState state[8][8];
 };
 
-void findCompMove (struct GameState *Game, int depth, char *outputMove) {
+struct Move {
+    int x, y;
+};
+
+void moveToString(struct Move m, char *output) {
+    char str[3];
+    str[0] = m.x + '1';
+    str[1] = m.y + 'a';
+    str[2] = '\0';
+    strcpy(output, str);
+}
+
+void getAvailableMoves(struct GameState Game, struct Move output[32]) {
+    int count = 0;
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            if (viableMove(&Game, i, j)) {
+                output[count].x = i;
+                output[count].y = j;
+                count++;
+            }
+        }
+    }
+    output[count].x = output[count].y = -1;
+}
+
+int evaluate(struct GameState Game, struct Move *move) {
+    char m[3];
+    moveToString(*move, m);
+    play(&Game, m);
+    return (Game.black - Game.white);
+}
+
+void findCompMove (struct GameState Game, int depth, char *outputMove) {
     int maxDepth = 5;
     if (depth > maxDepth) {
         return;
     }
     int count = 0;
     int best = -10000;
-    char *move = "i9";
+    char move[3] = "i9\0";
     struct GameNode children[60];
-    for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 8; j++) {
-            if (viableMove(Game, i, j)) {
-//                struct GameNode *child = children+count;
-                struct GameNode *child;
-            printf("1");
-                child->state = (struct GameState *)malloc(15);
-            printf("2");
-                memcpy(child->state, Game, sizeof(*Game));
-                printf("%s",child->state->board[3][3]);
-//                child->state = *Game;
-//                child->max = 1 - Game->max;
-                child->state->currentP = Game->currentO;
-                child->state->currentO = Game->currentP;
-//                child->parent-> = Game;
-//                child->state->board
-//                child->state->board = Game->board;
-                memcpy(child->state->board, Game->board, sizeof(Game->board));
-                update(child->state, i, j);
-                int eval = evalFunc(child->state);
-                if (eval > best) {
-                    *move = '1'+i;
-                    *(move+1) = 'a'+j;
-                    best = eval;
-                }
-            }
+    struct Move available[32];
+    getAvailableMoves(Game, available);
+    // for (int i = 0; i < 32; i++) {
+    //     if(mbuffer[i].x > 7) {
+    //         break;
+    //     }
+    //     moveToString(mbuffer[i], move);
+    //     printf("%s\n", move);
+    // }
+
+    for (int i = 0; available[i].x != -1; i++) {
+        int eval = evaluate(Game, &available[i]);
+
+        // char tmp[3];
+        // moveToString(available[i],tmp);
+        // printf("  %s: %i\n", tmp, eval);
+
+        if(eval > best) {
+            moveToString(available[i], move);
+            best = eval;
         }
     }
     strcpy(outputMove, move);
 }
-int evalFunc(struct GameState *Game) {
-    return Game->black - Game->white;
-}
-

@@ -3,6 +3,11 @@
 #include <string.h>
 #include "Reversi.h"
 
+void swapPlayers(struct GameState *Game) {
+    Game->currentO = Game->currentP;
+    Game->currentP = (Game->currentP == Black) ? White : Black;
+}
+
 //kompileringskommando: gcc -o reversi ReversiMain.c ReversiLogic.c ReversiAI.c
 int main(void) {
     //set up initial GameState
@@ -23,25 +28,23 @@ int main(void) {
     printBoard(&Game);
     while (1) {
         if (!anyViableMove(&Game)) {
-            Game.currentO = Game.currentP;
-            Game.currentP = (Game.currentP == Black) ? White : Black;
+            swapPlayers(&Game);
             gameOver = 1;
             continue;
         }
+
         if (Game.currentP == p) {
             if (scanf("%s", input) != 1)
             break;
             if(play(&Game, input)) {
-                Game.currentO = Game.currentP;
-                Game.currentP = (Game.currentP == Black) ? White : Black;
+                swapPlayers(&Game);
                 gameOver = 0;
             }
         } else {
-            findCompMove(&Game, 0, computerMove);
-//            compMove(&Game, computerMove);
+            findCompMove(Game, 0, computerMove);
+            play(&Game, computerMove);
             printf("Computer plays: %s\n", computerMove);
-            Game.currentO = Game.currentP;
-            Game.currentP = (Game.currentP == Black) ? White : Black;
+            swapPlayers(&Game);
             gameOver = 0;
         }
         printBoard(&Game);

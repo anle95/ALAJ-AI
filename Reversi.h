@@ -24,7 +24,7 @@ void update(struct GameState *Game, int a, int b);
 int checkLine(struct GameState *Game, int a, int b, int dirX, int dirY);
 void turn(struct GameState *Game, int a, int b, int dirX, int dirY);
 int anyViableMove(struct GameState *Game);
-void findCompMove (struct GameState *Game, int depth, char *outputMove);
+void findCompMove (struct GameState Game, int depth, char *outputMove);
 int evalFunc(struct GameState *Game);
 
 
