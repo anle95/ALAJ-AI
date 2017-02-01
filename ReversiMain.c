@@ -37,7 +37,8 @@ int main(void) {
                 gameOver = 0;
             }
         } else {
-            compMove(&Game, computerMove);
+            findCompMove(&Game, 0, computerMove);
+//            compMove(&Game, computerMove);
             printf("Computer plays: %s\n", computerMove);
             Game.currentO = Game.currentP;
             Game.currentP = (Game.currentP == Black) ? White : Black;
