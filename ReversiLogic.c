@@ -3,6 +3,10 @@
 #include <string.h>
 #include "Reversi.h"
 
+void update(struct GameState *Game, int a, int b);
+int checkLine(struct GameState *Game, int a, int b, int dirX, int dirY);
+void turn(struct GameState *Game, int a, int b, int dirX, int dirY);
+
 void resetGame(struct GameState *Game) {
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
@@ -88,6 +92,11 @@ int viableMove(struct GameState *Game, int a, int b) {
     return 0;
 }
 
+void swapPlayers(struct GameState *Game) {
+    Game->currentO = Game->currentP;
+    Game->currentP = (Game->currentP == Black) ? White : Black;
+}
+
 void update(struct GameState *Game, int a, int b) {
     Game->board[a][b] = Game->currentP;
     if (Game->currentP == White) Game->white++;
@@ -100,6 +109,7 @@ void update(struct GameState *Game, int a, int b) {
             }
         }
     }
+    swapPlayers(Game);
 }
 
 int checkLine(struct GameState *Game, int a, int b, int dirX, int dirY) {

@@ -20,11 +20,11 @@ void moveToString(struct Move m, char *output) {
     strcpy(output, str);
 }
 
-void getAvailableMoves(struct GameState Game, struct Move output[32]) {
+void getAvailableMoves(struct GameState *Game, struct Move output[32]) {
     int count = 0;
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
-            if (viableMove(&Game, i, j)) {
+            if (viableMove(Game, i, j)) {
                 output[count].x = i;
                 output[count].y = j;
                 count++;
@@ -34,34 +34,40 @@ void getAvailableMoves(struct GameState Game, struct Move output[32]) {
     output[count].x = output[count].y = -1;
 }
 
-int evaluate(struct GameState Game, struct Move *move) {
-    char m[3];
-    moveToString(*move, m);
-    play(&Game, m);
-    return (Game.black - Game.white);
+int evaluate(struct GameState *Game) {
+    if (Game->currentP == Black)
+        return (Game->black - Game->white);
+    else return (Game->white - Game->black);
 }
 
-void findCompMove (struct GameState Game, int depth, char *outputMove) {
+int recFind (struct GameState Game, struct Move m, int depth) {
+    char move[3];
+    moveToString(m, move);
+    play(&Game, move);
+
     int maxDepth = 5;
-    if (depth > maxDepth) {
-        return;
+    if (depth > maxDepth)
+        return evaluate(&Game);
+
+    int best = -10000;
+    struct Move available[32];
+    getAvailableMoves(&Game, available);
+    for (int i = 0; available[i].x != -1; i++) {
+        int value = recFind(Game, available[i], depth+1);
+        if(value > best)
+            best = value;
     }
-    int count = 0;
+    return best;
+}
+
+void findCompMove (struct GameState Game, char *outputMove) {
     int best = -10000;
     char move[3] = "i9\0";
     struct GameNode children[60];
     struct Move available[32];
-    getAvailableMoves(Game, available);
-    // for (int i = 0; i < 32; i++) {
-    //     if(mbuffer[i].x > 7) {
-    //         break;
-    //     }
-    //     moveToString(mbuffer[i], move);
-    //     printf("%s\n", move);
-    // }
-
+    getAvailableMoves(&Game, available);
     for (int i = 0; available[i].x != -1; i++) {
-        int eval = evaluate(Game, &available[i]);
+        int eval = recFind(Game, available[i], 0);
 
         // char tmp[3];
         // moveToString(available[i],tmp);
