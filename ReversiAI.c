@@ -12,6 +12,14 @@ struct Move {
     int x, y;
 };
 
+void moveToString(struct Move m, char *output);
+void getAvailableMoves(struct GameState *Game, struct Move output[32]);
+int evaluate(struct GameState *Game);
+int maxValue(struct GameState Game, struct Move *m, int alpha, int beta, int depth);
+int minValue(struct GameState Game, struct Move *m, int alpha, int beta, int depth);
+
+int MAX_DEPTH = 15;
+
 void moveToString(struct Move m, char *output) {
     char str[3];
     str[0] = m.x + '1';
@@ -35,48 +43,66 @@ void getAvailableMoves(struct GameState *Game, struct Move output[32]) {
 }
 
 int evaluate(struct GameState *Game) {
-    if (Game->currentP == Black)
-        return (Game->black - Game->white);
-    else return (Game->white - Game->black);
+    return (Game->black - Game->white);
 }
 
-int recFind (struct GameState Game, struct Move m, int depth) {
-    char move[3];
-    moveToString(m, move);
-    play(&Game, move);
-
-    int maxDepth = 4;
-    if (depth > maxDepth)
-        return evaluate(&Game);
-
-    int best = -10000;
-    struct Move available[32];
-    getAvailableMoves(&Game, available);
-    for (int i = 0; available[i].x != -1; i++) {
-        int value = recFind(Game, available[i], depth+1);
-        if(value > best)
-            best = value;
-    }
-    return best;
-}
-
-void findCompMove (struct GameState Game, char *outputMove) {
-    int best = -10000;
-    char move[3] = "i9\0";
-    struct GameNode children[60];
-    struct Move available[32];
-    getAvailableMoves(&Game, available);
-    for (int i = 0; available[i].x != -1; i++) {
-        int eval = recFind(Game, available[i], 0);
-
-        // char tmp[3];
-        // moveToString(available[i],tmp);
-        // printf("  %s: %i\n", tmp, eval);
-
-        if(eval > best) {
-            moveToString(available[i], move);
-            best = eval;
+void minimax(struct GameState *Game, int depth, char *output) {
+    MAX_DEPTH = depth;
+    struct Move actions[32];
+    int bestMoveIndex = 0;
+    int best = -100;
+    getAvailableMoves(Game, actions);
+    for (int i = 0; actions[i].x != -1; i++) {
+        int min = (Game->currentP == Black) ?
+            minValue(*Game, &actions[i], -100, -100, 1):
+            maxValue(*Game, &actions[i], -100, -100, 1);
+        char tmp[3];
+        moveToString(actions[i],tmp);
+        printf("  %s: %i\n", tmp, min);
+        if (min > best) {
+            best = min;
+            bestMoveIndex = i;
         }
     }
-    strcpy(outputMove, move);
+
+    moveToString(actions[bestMoveIndex], output);
+}
+
+int maxValue(struct GameState Game, struct Move *m, int alpha, int beta, int depth) {
+    char move[3];
+    moveToString(*m, move);
+    play(&Game, move);
+
+    if(m->x == -1 || depth > MAX_DEPTH) return evaluate(&Game);
+
+    int value = -100;
+    struct Move actions[32];
+    getAvailableMoves(&Game, actions);
+    for (int i = 0; actions[i].x != -1; i++) {
+        int min = minValue(Game, &actions[i], alpha, beta, depth+1);
+        value = (value > min) ? value : min;
+        if(value >= beta) return value;
+        alpha = (alpha > value) ? alpha : value;
+    }
+    return value;
+}
+
+int minValue(struct GameState Game, struct Move *m, int alpha, int beta, int depth) {
+    char move[3];
+    moveToString(*m, move);
+    play(&Game, move);
+
+    int maxdepth = 1;
+    if(m->x == -1 || depth > MAX_DEPTH) return evaluate(&Game);
+
+    int value = -100;
+    struct Move actions[32];
+    getAvailableMoves(&Game, actions);
+    for (int i = 0; actions[i].x != -1; i++) {
+        int max = maxValue(Game, &actions[i], alpha, beta, depth+1);
+        value = (value > max) ? value : max;
+        if(value >= alpha) return value;
+        beta = (beta > value) ? beta : value;
+    }
+    return value;
 }

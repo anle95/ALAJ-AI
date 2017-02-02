@@ -8,7 +8,6 @@ int main(void) {
     //set up initial GameState
     struct GameState Game;
     resetGame(&Game);
-    int gameOver = 0;
 
     char input[2];
     printf("Enter your color (Black or White): \n");
@@ -19,28 +18,26 @@ int main(void) {
     }
 
     Player p = (strcmp(pChar, "Black") == 0) ? Black : White;
-    char computerMove[2];
+    char computerMove[3];
     printBoard(&Game);
-    while (!gameOver) {
-        if (!anyViableMove(&Game)) {
-            gameOver = 1;
-            continue;
-        }
+    while (1) {
+        if (!anyViableMove(&Game)) break;
 
-        if (Game.currentP == p) {
+        if (Game.currentP == White) {
             if (scanf("%s", input) != 1)
-            break;
-            if(play(&Game, input)) {
-                gameOver = 0;
-            }
+                break;
+            play(&Game, input);
+            // minimax(&Game, 0, computerMove);
+            // printf("Black plays -%s-\n", computerMove);
+            // play(&Game, computerMove);
         } else {
-            findCompMove(Game, computerMove);
+            minimax(&Game, 1, computerMove);
+            printf("Computer plays -%s-\n", computerMove);
             play(&Game, computerMove);
-            printf("Computer plays: %s\n", computerMove);
-            gameOver = 0;
         }
         printBoard(&Game);
     }
-
+    char *winner = (Game.black > Game.white) ? "Black" : "White";
+    printf("%s wins!\n", winner);
     return 0;
 }

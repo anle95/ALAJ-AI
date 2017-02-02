@@ -26,14 +26,14 @@ void printBoard(struct GameState *Game) {
         printf("\n");
         for (int j = 0; j < 8; j++) {
             switch (Game->board[i][j]) {
-                case White:
-                    printf("%c", 'W');
-                    break;
                 case Black:
-                    printf("%c", 'B');
+                    printf("%c", 'X');
+                    break;
+                case White:
+                    printf("%c", 'O');
                     break;
                 default:
-                    printf("%c", '_');
+                    printf("%c", '-');
                     break;
             }
         }

@@ -20,7 +20,7 @@ int play(struct GameState *Game, char *move);
 void compMove(struct GameState *Game, char *outputMove);
 int viableMove(struct GameState *Game, int a, int b);
 int anyViableMove(struct GameState *Game);
-void findCompMove (struct GameState Game, char *outputMove);
+void minimax(struct GameState *Game, int depth, char *output);
 
 
 #endif
