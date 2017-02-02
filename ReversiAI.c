@@ -20,6 +20,10 @@ int minValue(struct GameState Game, struct Move *m, int alpha, int beta, int dep
 
 int MAX_DEPTH = 15;
 
+void printdepth(int d) {
+    for(int i = 0; i < d; i++) printf("  ");
+}
+
 void moveToString(struct Move m, char *output) {
     char str[3];
     str[0] = m.x + '1';
@@ -58,7 +62,7 @@ void minimax(struct GameState *Game, int depth, char *output) {
             maxValue(*Game, &actions[i], -100, -100, 1);
         char tmp[3];
         moveToString(actions[i],tmp);
-        printf("  %s: %i\n", tmp, min);
+        printf("%s: %i\n", tmp, min);
         if (min > best) {
             best = min;
             bestMoveIndex = i;
@@ -80,6 +84,10 @@ int maxValue(struct GameState Game, struct Move *m, int alpha, int beta, int dep
     getAvailableMoves(&Game, actions);
     for (int i = 0; actions[i].x != -1; i++) {
         int min = minValue(Game, &actions[i], alpha, beta, depth+1);
+        char tmp[3];
+        moveToString(actions[i],tmp);
+        printdepth(depth);
+        printf("    %s: %i\n", tmp, min);
         value = (value > min) ? value : min;
         if(value >= beta) return value;
         alpha = (alpha > value) ? alpha : value;
@@ -91,18 +99,21 @@ int minValue(struct GameState Game, struct Move *m, int alpha, int beta, int dep
     char move[3];
     moveToString(*m, move);
     play(&Game, move);
-
-    int maxdepth = 1;
     if(m->x == -1 || depth > MAX_DEPTH) return evaluate(&Game);
 
-    int value = -100;
+    int value = 100;
     struct Move actions[32];
     getAvailableMoves(&Game, actions);
     for (int i = 0; actions[i].x != -1; i++) {
         int max = maxValue(Game, &actions[i], alpha, beta, depth+1);
-        value = (value > max) ? value : max;
-        if(value >= alpha) return value;
-        beta = (beta > value) ? beta : value;
+        char tmp[3];
+        moveToString(actions[i],tmp);
+        printdepth(depth);
+        printf("    %s: %i\n", tmp, max);
+        value = (value < max) ? value : max;
+        if(value <= alpha) return value;
+        beta = (beta < value) ? beta : value;
+
     }
     return value;
 }

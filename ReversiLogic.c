@@ -110,6 +110,7 @@ void update(struct GameState *Game, int a, int b) {
         }
     }
     swapPlayers(Game);
+    if(!anyViableMove(Game)) swapPlayers(Game);
 }
 
 int checkLine(struct GameState *Game, int a, int b, int dirX, int dirY) {
