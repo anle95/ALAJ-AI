@@ -15,8 +15,9 @@ struct Move {
 void moveToString(struct Move m, char *output);
 void getAvailableMoves(struct GameState *Game, struct Move output[32]);
 int evaluate(struct GameState *Game);
-int maxValue(struct GameState Game, struct Move *m, int alpha, int beta, int depth);
-int minValue(struct GameState Game, struct Move *m, int alpha, int beta, int depth);
+int optimize(struct GameState Game, struct Move *m, int alpha, int beta, int depth);
+int maxValue(struct GameState *Game, int alpha, int beta, int depth);
+int minValue(struct GameState *Game, int alpha, int beta, int depth);
 
 int MAX_DEPTH = 15;
 
@@ -54,17 +55,16 @@ void minimax(struct GameState *Game, int depth, char *output) {
     MAX_DEPTH = depth;
     struct Move actions[32];
     int bestMoveIndex = 0;
-    int best = -100;
+    int best = (Game->currentP == Black) ? -100 : 100;
     getAvailableMoves(Game, actions);
     for (int i = 0; actions[i].x != -1; i++) {
-        int min = (Game->currentP == Black) ?
-            minValue(*Game, &actions[i], -100, -100, 1):
-            maxValue(*Game, &actions[i], -100, -100, 1);
-        char tmp[3];
-        moveToString(actions[i],tmp);
-        printf("%s: %i\n", tmp, min);
-        if (min > best) {
-            best = min;
+        int val = optimize(*Game, &actions[i], -100, 100, 1);
+        // char tmp[3];
+        // moveToString(actions[i],tmp);
+        // printf(">>%s: %i\n", tmp, val);
+        if ((val > best && Game->currentP == Black) ||
+            (val < best && Game->currentP == White)) {
+            best = val;
             bestMoveIndex = i;
         }
     }
@@ -72,48 +72,48 @@ void minimax(struct GameState *Game, int depth, char *output) {
     moveToString(actions[bestMoveIndex], output);
 }
 
-int maxValue(struct GameState Game, struct Move *m, int alpha, int beta, int depth) {
+int optimize(struct GameState Game, struct Move *m, int alpha, int beta, int depth) {
+    Player lastPlayer = Game.currentP;
     char move[3];
     moveToString(*m, move);
     play(&Game, move);
-
     if(m->x == -1 || depth > MAX_DEPTH) return evaluate(&Game);
 
+    return (Game.currentP == Black) ?
+        maxValue(&Game, alpha, beta, depth):
+        minValue(&Game, alpha, beta, depth);
+}
+
+int maxValue(struct GameState *Game, int alpha, int beta, int depth) {
     int value = -100;
     struct Move actions[32];
-    getAvailableMoves(&Game, actions);
+    getAvailableMoves(Game, actions);
     for (int i = 0; actions[i].x != -1; i++) {
-        int min = minValue(Game, &actions[i], alpha, beta, depth+1);
-        char tmp[3];
-        moveToString(actions[i],tmp);
-        printdepth(depth);
-        printf("    %s: %i\n", tmp, min);
-        value = (value > min) ? value : min;
+        int best = optimize(*Game, &actions[i], alpha, beta, depth+1);
+        // char tmp[3];
+        // moveToString(actions[i],tmp);
+        // printdepth(depth);
+        // printf("  %c%s: %i \n", (Game->currentP == Black ? 'B' : 'W'), tmp, best);
+        value = (best > value) ? best : value;
         if(value >= beta) return value;
         alpha = (alpha > value) ? alpha : value;
     }
     return value;
 }
 
-int minValue(struct GameState Game, struct Move *m, int alpha, int beta, int depth) {
-    char move[3];
-    moveToString(*m, move);
-    play(&Game, move);
-    if(m->x == -1 || depth > MAX_DEPTH) return evaluate(&Game);
-
+int minValue(struct GameState *Game, int alpha, int beta, int depth) {
     int value = 100;
     struct Move actions[32];
-    getAvailableMoves(&Game, actions);
+    getAvailableMoves(Game, actions);
     for (int i = 0; actions[i].x != -1; i++) {
-        int max = maxValue(Game, &actions[i], alpha, beta, depth+1);
-        char tmp[3];
-        moveToString(actions[i],tmp);
-        printdepth(depth);
-        printf("    %s: %i\n", tmp, max);
-        value = (value < max) ? value : max;
+        int best = optimize(*Game, &actions[i], alpha, beta, depth+1);
+        // char tmp[3];
+        // moveToString(actions[i],tmp);
+        // printdepth(depth);
+        // printf("  %c%s: %i \n", (Game->currentP == Black ? 'B' : 'W'), tmp, best);
+        value = (value < best) ? value : best;
         if(value <= alpha) return value;
         beta = (beta < value) ? beta : value;
-
     }
     return value;
 }

@@ -10,31 +10,31 @@ int main(void) {
     resetGame(&Game);
 
     char input[2];
-    // printf("Enter your color (Black or White): \n");
-    // char pChar[6];
-    // while (scanf("%s", pChar) != 1 ||
-    //     (strcmp(pChar, "Black") != 0 && strcmp(pChar, "White") != 0) ) {
-    //         printf("Invalid choice, please choose Black or White (mind the capital letters): \n");
-    // }
-    //
-    // Player p = (strcmp(pChar, "Black") == 0) ? Black : White;
-    Player p = White;
-    char computerMove[3];
+    printf("Enter your color (Black or White): \n");
+    char pChar[6];
+    while (scanf("%s", pChar) != 1 ||
+        (strcmp(pChar, "Black") != 0 && strcmp(pChar, "White") != 0) ) {
+            printf("Invalid choice, please choose Black or White (mind the capital letters): \n");
+    }
+
+    Player p = (strcmp(pChar, "Black") == 0) ? Black : White;
+    char moveBuffer[3];
     printBoard(&Game);
     while (1) {
         if (!anyViableMove(&Game)) break;
 
-        if (Game.currentP == White) {
+        if (Game.currentP == p) {
+            // minimax(&Game, 2, moveBuffer);
+            // printf("I suggest -%s-\n", moveBuffer);
             if (scanf("%s", input) != 1)
                 break;
             play(&Game, input);
-            // minimax(&Game, 2, computerMove);
-            // printf("ComputerW plays -%s-\n", computerMove);
-            // play(&Game, computerMove);
+            // printf("Computer plays -%s-\n", moveBuffer);
+            // play(&Game, moveBuffer);
         } else {
-            minimax(&Game, 2, computerMove);
-            printf("ComputerB plays -%s-\n", computerMove);
-            play(&Game, computerMove);
+            minimax(&Game, 7, moveBuffer);
+            printf("Computer plays -%s-\n", moveBuffer);
+            play(&Game, moveBuffer);
         }
         printBoard(&Game);
     }
