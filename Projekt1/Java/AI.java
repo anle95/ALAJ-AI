@@ -1,11 +1,10 @@
 import java.util.LinkedList;
 
 public class AI {
-	private static final int MAX_DEPTH = 20;
 	private int time; //time in milliseconds
 	private int maxTime; //maximum time to take on a move
 	private int depth;
-	private static class Move {
+	public static class Move {
 	    int x, y;
 	    public Move (int x, int y) {
 	    	this.x = x;
@@ -56,6 +55,7 @@ public class AI {
 	}
 	
 	private String minimax(GameState game, int depth) {
+		if(depth > 64 - game.blackDisks() - game.whiteDisks()) return "END";
 		this.depth = depth;
 		int best = (game.getCurrentPlayer() == Player.BLACK) ? -100 : 100;
 	    Move bestMove = new Move(-1,-1);
@@ -70,6 +70,7 @@ public class AI {
 	 	            bestMove = m;
 	 	    }
 	    }
+//	    return (best != -100 ? bestMove.toString() : "END"); 
 	    return bestMove.toString();
 	}
 	
@@ -77,7 +78,7 @@ public class AI {
 		if(timeOut()) return 0;
 		        
 	    game.play(m.toString());
-	    if(m.x == -1 || currDepth > this.depth || currDepth > MAX_DEPTH) return evaluate(game);
+	    if(m.x == -1 || currDepth > this.depth || depth > 64 - game.blackDisks() - game.whiteDisks()) return evaluate(game);
 
 	    return (game.getCurrentPlayer() == Player.BLACK) ?
 	        maxValue(game, alpha, beta, currDepth):
@@ -89,7 +90,7 @@ public class AI {
 	    LinkedList<Move> actions = getAvailableMoves(game);
 	    for(Move m : actions) {
 	        int best = optimize(new GameState(game), m, alpha, beta, currDepth+1);
-//	        for(int i = 0; i < depth; i++) System.out.print("  ");
+//	        for(int i = 0; i < currDepth; i++) System.out.print("  ");
 //	        System.out.println("  " + m.toString() + ": " + best);
 	        value = (best > value) ? best : value;
 	        if(value >= beta) return value;
@@ -103,7 +104,7 @@ public class AI {
 	    LinkedList<Move> actions = getAvailableMoves(game);
 	    for(Move m : actions) {
 	        int best = optimize(new GameState(game), m, alpha, beta, currDepth+1);
-//	        for(int i = 0; i < depth; i++) System.out.print("  ");
+//	        for(int i = 0; i < currDepth; i++) System.out.print("  ");
 //	        System.out.println("  " + m.toString() + ": " + best);
 	        value = (value < best) ? value : best;
 	        if(value <= alpha) return value;
@@ -116,7 +117,7 @@ public class AI {
 	    return (game.blackDisks() - game.whiteDisks());
 	}
 	
-	private LinkedList<Move> getAvailableMoves(GameState game) {
+	public static LinkedList<Move> getAvailableMoves(GameState game) {
 	    LinkedList<Move> result = new LinkedList<Move>();
 	    for (int i = 0; i < 8; i++) {
 	        for (int j = 0; j < 8; j++) {

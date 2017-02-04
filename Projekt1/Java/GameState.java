@@ -1,8 +1,7 @@
 
 public class GameState {
 	private Player[][] board;
-	private Player currentP;
-	private Player currentO;
+	private Player currentPlayer;
 	private int black;
 	private int white;
 	
@@ -18,8 +17,7 @@ public class GameState {
 			this.board[i] = new Player[8];
 			System.arraycopy(arr, 0, this.board[i], 0, 8);
 		}
-		currentP = c.currentP;
-		currentO = c.currentO;
+		currentPlayer = c.currentPlayer;
 		black = c.black;
 		white = c.white;
 	}
@@ -29,8 +27,7 @@ public class GameState {
 	}
 	
 	private void swapPlayers() {
-	    currentO = currentP;
-	    currentP = currentP == Player.BLACK ? Player.WHITE : Player.BLACK;
+	    currentPlayer = (currentPlayer == Player.BLACK) ? Player.WHITE : Player.BLACK;
 	}
 	
 	private boolean checkLine(int a, int b, int dirX, int dirY) {
@@ -38,19 +35,20 @@ public class GameState {
 	    int y = b + dirY;
 	    if(!(onBoard(x) && onBoard(y))) return false;
 	    Player curr = board[x][y];
-	    if (curr == currentP) return false;
-	    while (curr == currentO) {
+	    if (curr == currentPlayer) return false;
+	    Player currentOpponent = (currentPlayer == Player.BLACK) ? Player.WHITE : Player.BLACK;
+	    while (curr == currentOpponent) {
 	        x += dirX;
 	        y += dirY;
 	        if(!(onBoard(x) && onBoard(y))) return false;
 	        curr = board[x][y];
 	    }
-	    if (curr == currentP) return true;
-	    else return false;
+	    if (curr == currentPlayer) 	return true;
+	    else 						return false;
 	}
 	
 	public Player getCurrentPlayer() {
-		return currentP;
+		return currentPlayer;
 	}
 	
 	public int blackDisks() {
@@ -69,31 +67,34 @@ public class GameState {
 	    }
 	    board[3][3] = board[4][4] = Player.WHITE;
 	    board[4][3] = board[3][4] = Player.BLACK;
-	    currentP = Player.BLACK;
-	    currentO = Player.WHITE;
+	    currentPlayer = Player.BLACK;
 	    black = 2;
 	    white = 2;
 	}
 	
-	public void print() {
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
 	    for (int i = 0; i < 8; i++) {
-	        System.out.println();
+	    	sb.append('\n');
 	        for (int j = 0; j < 8; j++) {
 	            switch (board[i][j]) {
 	                case BLACK:
-	                    System.out.print('X');
+	                	sb.append('X');
 	                    break;
 	                case WHITE:
-	                	System.out.print('O');
+	                	sb.append('O');
 	                    break;
 	                default:
-	                	System.out.print('-');
+	                	sb.append('-');
 	                    break;
 	            }
 	        }
 	    }
-	    String pString = currentP == Player.BLACK ? "Black" : "White";
-	    System.out.println("\n" + black + " - " + white + "\n" + pString + " to move");
+	    sb.append('\n');
+	    sb.append(black + " - " + white);
+	    sb.append('\n');
+	    sb.append(currentPlayer + " to move");
+	    return sb.toString();
 	}
 	
 	public boolean play(String move) {
@@ -117,9 +118,9 @@ public class GameState {
 	}
 	
 	private void update(int a, int b) {
-	    board[a][b] = currentP;
-	    if (currentP == Player.WHITE) white++;
-	    else						  black++;
+	    board[a][b] = currentPlayer;
+	    if (currentPlayer == Player.BLACK)	black++;
+	    else								white++;
 
 	    for (int i = -1; i <= 1; i++) {
 	        for (int j = -1; j <= 1; j++) {
@@ -136,14 +137,14 @@ public class GameState {
 	    int x = a + dirX;
 	    int y = b + dirY;
 	    int turned = 0;
-	    while (board[x][y] != currentP) {
-	        board[x][y] = currentP;
+	    while (board[x][y] != currentPlayer) {
+	        board[x][y] = currentPlayer;
 	        turned++;
 	        x += dirX;
 	        y += dirY;
 	    }
 
-	    if (currentP == Player.WHITE) {
+	    if (currentPlayer == Player.WHITE) {
 	        white += turned;
 	        black -= turned;
 	    } else {
@@ -153,7 +154,7 @@ public class GameState {
 	}
 	
 	public boolean viableMove(int a, int b) {
-	    if (board[a][b] != Player.NONE) return false;;
+	    if (board[a][b] != Player.NONE) return false;
 	    for (int i = -1; i <= 1; i++) {
 	        for (int j = -1; j <= 1; j++) {
 	            if (!(i == 0 && j == 0) && checkLine(a, b, i, j)) return true;
