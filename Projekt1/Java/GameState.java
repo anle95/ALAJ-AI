@@ -67,10 +67,8 @@ public class GameState {
 	            board[i][j] = Player.NONE;
 	        }
 	    }
-	    board[3][3] = Player.WHITE;
-	    board[4][4] = Player.WHITE;
-	    board[4][3] = Player.BLACK; 
-	    board[3][4] = Player.BLACK;
+	    board[3][3] = board[4][4] = Player.WHITE;
+	    board[4][3] = board[3][4] = Player.BLACK;
 	    currentP = Player.BLACK;
 	    currentO = Player.WHITE;
 	    black = 2;
