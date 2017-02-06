@@ -6,7 +6,7 @@ public class Main {
 	    GameState game = new GameState();
 	    Scanner s = new Scanner(System.in);
 	    
-	    System.out.println("Enter your color (X (Black) or O (White)): ");
+	    System.out.println("Enter your colour (X (Black) or O (White)): ");
 	    String player = s.next();
 	    while (!player.toUpperCase().equals("X") && !player.toUpperCase().equals("O")) {
 	    	System.out.println("Invalid choice, please choose X or O (the letter, not zero).");
@@ -32,18 +32,18 @@ public class Main {
 	        if (!game.anyViableMove()) break;
 
 	        if (game.getCurrentPlayer() == p) {
-	        	String move = s.next();
-//	        	String move = AI.getMove(game, time);
-//	            System.out.println("Computer " + game.getCurrentPlayer() + " plays -" + move + "-");
-	            game.play(move);
+	        	String compMove = AI.minimax(game, 2000);
+	            System.out.println("Computer " + game.getCurrentPlayer() + " suggests -" + compMove + "-");
+//	        	String move = s.next();
+	            game.play(compMove);
 	        } else {
-	            String move = AI.getMove(game, time);
+	            String move = AI.minimax(game, time);
 	            System.out.println("Computer " + game.getCurrentPlayer() + " plays -" + move + "-");
 	            game.play(move);
 	        }
 	        System.out.println(game);
 	    }
-	    String winner = (game.blackDisks() > game.whiteDisks()) ? "Black" : "White";
+	    Player winner = (game.blackDisks() > game.whiteDisks()) ? Player.BLACK : Player.WHITE;
 	    System.out.println(winner + " wins!");
 	    s.close();
 	}
