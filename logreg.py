@@ -2,10 +2,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 
-# french = [36961, 2503, 43621, 2992, 15694, 1042, 36231, 2487, 29945, 2014, 40588, 2805, 75255, 5062, 37709, 2643, 30899,
-#           2126, 25486, 1784, 37497, 2641, 40398, 2766, 74105, 5047, 76725, 5312, 18317, 1215]
-# english = [35680, 2217, 42514, 2761, 15162, 990, 35298, 2274, 29800, 1865, 40255, 2606, 74532, 4805, 37464, 2396, 31030,
-#            1993, 24843, 1627, 36172, 2375, 39552, 2560, 72545, 4597, 75352, 4871, 18031, 1119]
+# french = [36961, 2503, 43621, 2992, 15694, 1042, 36231, 2487, 29945, 2014, 40588, 2805, 75255, 5062, 37709, 2643,
+#           30899, 2126, 25486, 1784, 37497, 2641, 40398, 2766, 74105, 5047, 76725, 5312, 18317, 1215]
+# english = [35680, 2217, 42514, 2761, 15162, 990, 35298, 2274, 29800, 1865, 40255, 2606, 74532, 4805, 37464, 2396,
+#            31030, 1993, 24843, 1627, 36172, 2375, 39552, 2560, 72545, 4597, 75352, 4871, 18031, 1119]
 
 french_L = []
 english_L = []
@@ -52,35 +52,32 @@ plt.plot(french_L, french_A, 'r.')
 plt.plot(english_L, english_A, 'b.')
 q *= 2
 
+
 # logistic regression algorithm
-alpha = 0.9
-epsilon = 0.01
-w = [0, 0, 0]
-# w = [-0.684, 265, -275]
-iterations = 0
-grad = epsilon + 1
-while grad > epsilon:
-    # alpha = 1 / (1 + iterations / 1000)
-    nums = np.random.permutation(q)
-    iterations += 1
-    term0 = []
-    term1 = []
-    term2 = []
-    for j in nums:
-        last = len(term0)
-        wx = w[0] + w[1] * data[j][1] + w[2] * data[j][2]
-        y_hat = 1 / (1 + math.pow(math.e, -wx))
-        term0.append(data[j][0] - y_hat)
-        term1.append(data[j][1] * term0[last])
-        term2.append(data[j][2] * term0[last])
-        w[0] += alpha * term0[last]
-        w[1] += alpha * term1[last]
-        w[2] += alpha * term2[last]
-    grad0 = sum(term0)
-    grad1 = sum(term1)
-    grad2 = sum(term2)
-    grad = math.sqrt(grad0**2 + grad1**2 + grad2**2)
-print('grad:', grad)
+def stoch_ga(data, epsilon):
+    alpha = 0.9
+    w = np.zeros(3)
+    y = data[:, 0]
+    x = data[:, 1:]
+    iterations = 0
+    grad = epsilon + 1
+    q = len(data)
+    while grad > epsilon:
+        iterations += 1
+        nums = np.random.permutation(q)
+        gradml = np.zeros((q, 3))
+        for j in nums:
+            wx = w[0] + w[1]*x[j, 0] + w[2]*x[j, 1]
+            y_err = y[j] - (1 / (1 + math.pow(math.e, -wx)))
+            gradml[j, :] = y_err * np.array([1.0,
+                                             x[j, 0],
+                                             x[j, 1]])
+            w += alpha*gradml[j]
+        grad = math.sqrt((gradml[:, 0].sum())**2 + (gradml[:, 1].sum())**2 + (gradml[:, 2].sum())**2)
+    print('grad:', grad)
+    return [w, iterations]
+
+[w, iterations] = stoch_ga(np.array(data), 0.01)
 print('Stochastic logistic regression iterations:', iterations)
 x = [0, 1]
 y = [-w[0]/w[2]-w[1]/w[2]*x[0], -w[0]/w[2]-w[1]/w[2]*x[1]]

@@ -6,134 +6,81 @@ french = [36961, 2503, 43621, 2992, 15694, 1042, 36231, 2487, 29945, 2014, 40588
           2126, 25486, 1784, 37497, 2641, 40398, 2766, 74105, 5047, 76725, 5312, 18317, 1215]
 english = [35680, 2217, 42514, 2761, 15162, 990, 35298, 2274, 29800, 1865, 40255, 2606, 74532, 4805, 37464, 2396, 31030,
            1993, 24843, 1627, 36172, 2375, 39552, 2560, 72545, 4597, 75352, 4871, 18031, 1119]
-q = len(french)
-french_A = []
-english_A = []
-french_L = []
-english_L = []
-for i in range(0, q, 2):
-    french_L.append(french[i])
-    french_A.append(french[i+1])
-    english_L.append(english[i])
-    english_A.append(english[i+1])
-maxFreq = max(french_L + english_L + french_L + english_A)
-q = int(q/2)
-for i in range(q):
-    french_L[i] /= maxFreq
-    french_A[i] /= maxFreq
-    english_L[i] /= maxFreq
-    english_A[i] /= maxFreq
-plt.plot(french_L, french_A, 'ro')
-plt.plot(english_L, english_A, 'bo')
 
-# GD - french
-alpha = 0.99
-epsilon = 0.001
-w = [0, 0]
-iterations = 0
-grad = 1
-while grad > epsilon:
-    iterations += 1
-    term0 = [];
-    term1 = [];
-    for j in range(q):
-        term0.append(french_A[j]-(w[0]+w[1]*french_L[j]))
-        term1.append(french_L[j] * (french_A[j] - (w[0] + w[1] * french_L[j])))
-    sum0 = sum(term0)
-    sum1 = sum(term1)
-    grad0 = -2*sum0
-    grad1 = -2*sum1
-    w[0] += (alpha/q)*sum0
-    w[1] += (alpha/q)*sum1
-    grad = math.sqrt(grad0**2 + grad1**2)
-print('Batch GD (french) iterations:', iterations)
+maxFreq = max(french + english)
+french_L = np.array(french[0:len(french):2]) / maxFreq
+english_L = np.array(english[0:len(english):2]) / maxFreq
+french_A = np.array(french[1:len(french):2]) / maxFreq
+english_A = np.array(english[1:len(english):2]) / maxFreq
+
+
+#Batch gradient descent
+def batch_gd(x, y, epsilon):
+    alpha = 0.99
+    w = np.zeros(2)
+    iterations = 0
+    grad = 1
+    q = len(x)
+    while abs(grad) > epsilon:
+        iterations += 1
+        gradsse = np.array([(y - (w[0] + w[1]*x)).sum(),
+                            (x*(y - (w[0] + w[1]*x))).sum()])
+        w += (alpha/q)*gradsse
+        grad = 2*math.sqrt(gradsse[0]**2 + gradsse[1]**2)
+    return [w, iterations]
+
+# French
+plt.plot(french_L, french_A, 'ro')
+[w, iterations] = batch_gd(french_L, french_A, 0.001)
+print('Batch GD (french) iterations: ', iterations)
 x = [0, 1]
-y = [w[0]+w[1]*x[0], w[0]+w[1]*x[1]]
+y = [w[0] + w[1]*x[0], w[0] + w[1]*x[1]]
 plt.plot(x, y, 'r')
 
-# GD - english
-alpha = 0.99
-epsilon = 0.001
-w = [0, 0]
-iterations = 0
-grad = 1
-while grad > epsilon:
-    iterations += 1
-    term0 = [];
-    term1 = [];
-    for j in range(q):
-        term0.append(english_A[j]-(w[0]+w[1]*english_L[j]))
-        term1.append(english_L[j] * (english_A[j] - (w[0] + w[1] * english_L[j])))
-    sum0 = sum(term0)
-    sum1 = sum(term1)
-    grad0 = -2*sum0
-    grad1 = -2*sum1
-    w[0] += (alpha/q)*sum0
-    w[1] += (alpha/q)*sum1
-    grad = math.sqrt(grad0**2 + grad1**2)
-print('Batch GD (english) iterations:', iterations)
+# English
+plt.plot(english_L, english_A, 'bo')
+[w, iterations] = batch_gd(english_L, english_A, 0.001)
+print('Batch GD (english) iterations: ', iterations)
 x = [0, 1]
 y = [w[0]+w[1]*x[0], w[0]+w[1]*x[1]]
 plt.plot(x, y, 'b')
 plt.title('batch version')
-# plt.show()
+plt.figure()
 
-# SGD - french
+
+#Stochastic gradient descent
+def stoch_gd(x, y, epsilon):
+    alpha = 0.95
+    w = np.zeros(2)
+    iterations = 0
+    grad = 1
+    q = len(x)
+    while grad > epsilon:
+        iterations += 1
+        nums = np.random.permutation(q)
+        gradsse = np.zeros((q, 2))
+        for i in nums:
+            gradsse[i, :] = [y[i] - (w[0] + w[1]*x[i]),
+                             x[i]*(y[i] - (w[0] + w[1]*x[i]))]
+            w += alpha*gradsse[i]
+        grad = 2*math.sqrt(gradsse[:, 0].sum() ** 2 + gradsse[:, 1].sum() ** 2)
+    return [w, iterations]
+
+# French
 plt.plot(french_L, french_A, 'ro')
-alpha = 0.95
-epsilon = 0.001
-w = [0, 0]
-iterations = 0
-grad = 1
-while grad > epsilon:
-    nums = np.random.permutation(q)
-    iterations += 1
-    term0 = []
-    term1 = []
-    sum0 = 0
-    sum1 = 0
-    for j in nums:
-        term0 = (french_A[j]-(w[0]+w[1]*french_L[j]))
-        term1 = (french_L[j] * (french_A[j] - (w[0] + w[1] * french_L[j])))
-        w[0] += alpha * term0
-        w[1] += alpha * term1
-        sum0 += term0
-        sum1 += term1
-    grad0 = -2*sum0
-    grad1 = -2*sum1
-    grad = math.sqrt(grad0**2 + grad1**2)
-print('Stochastic GD (french) iterations:', iterations)
+[w, iterations] = stoch_gd(french_L, french_A, 0.001)
+print('Stochastic GD (french) iterations: ', iterations)
 x = [0, 1]
-y = [w[0]+w[1]*x[0], w[0]+w[1]*x[1]]
+y = [w[0] + w[1]*x[0], w[0] + w[1]*x[1]]
 plt.plot(x, y, 'r')
 
-# SGD - english
+# English
 plt.plot(english_L, english_A, 'bo')
-alpha = 0.99
-epsilon = 0.001
-w = [0, 0]
-iterations = 0
-grad = 1
-while grad > epsilon:
-    nums = np.random.permutation(q)
-    iterations += 1
-    term0 = []
-    term1 = []
-    sum0 = 0
-    sum1 = 0
-    for j in nums:
-        term0 = (english_A[j]-(w[0]+w[1]*english_L[j]))
-        term1 = (english_L[j] * (english_A[j] - (w[0] + w[1] * english_L[j])))
-        w[0] += alpha * term0
-        w[1] += alpha * term1
-        sum0 += term0
-        sum1 += term1
-    grad0 = -2*sum0
-    grad1 = -2*sum1
-    grad = math.sqrt(grad0**2 + grad1**2)
-print('Stochastic GD (english) iterations:', iterations)
+[w, iterations] = stoch_gd(english_L, english_A, 0.001)
+print('Stochastic GD (english) iterations: ', iterations)
 x = [0, 1]
-y = [w[0]+w[1]*x[0], w[0]+w[1]*x[1]]
+y = [w[0] + w[1]*x[0], w[0] + w[1]*x[1]]
 plt.plot(x, y, 'b')
+
 plt.title('stochastic version')
 plt.show()
